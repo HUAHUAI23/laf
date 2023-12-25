@@ -2,26 +2,8 @@ echo "API_DOMAIN: $API_DOMAIN"
 echo "RUNTIME_DOMAIN: $RUNTIME_DOMAIN"
 echo "WEBSITE_DOMAIN: $WEBSITE_DOMAIN"
 echo "WEB_DOMAIN: $WEB_DOMAIN"
-echo "OSS_DOMAIN:$OSS_DOMAIN"
-echo "OSS_CONSOLE_DOMAIN:$OSS_CONSOLE_DOMAIN"
-
-# Function to check domain availability
-check_domain() {
-    if ! host "$1"; then
-        echo "Domain $1 is not available"
-        exit 1
-    else
-        echo "Domain $1 is available"
-    fi
-}
-
-# Check each domain
-check_domain $API_DOMAIN
-check_domain $RUNTIME_DOMAIN
-check_domain $WEBSITE_DOMAIN
-check_domain $WEB_DOMAIN
-check_domain $OSS_DOMAIN
-check_domain $OSS_CONSOLE_DOMAIN
+echo "OSS_DOMAIN: $OSS_DOMAIN"
+echo "OSS_CONSOLE_DOMAIN: $OSS_CONSOLE_DOMAIN"
 
 # *************** Environment Variables ************** #
 
@@ -105,7 +87,7 @@ helm install server -n ${NAMESPACE} \
     --set default_region.minio_root_secret_key=${MINIO_ROOT_SECRET_KEY} \
     --set default_region.runtime_domain=${RUNTIME_DOMAIN} \
     --set default_region.website_domain=${WEBSITE_DOMAIN} \
-    --set default_region.tls.enabled=false \
+    --set default_region.tls.enabled=true \
     --set default_region.runtime_exporter_secret=${RUNTIME_EXPORTER_SECRET} \
     $([ "$ENABLE_MONITOR" = "true" ] && echo "--set default_region.prometheus_url=${PROMETHEUS_URL}") \
     ./charts/laf-server
