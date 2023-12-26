@@ -33,13 +33,71 @@ helm install mongodb -n ${NAMESPACE} \
     ./charts/mongodb
 
 ## 3. install prometheus
-PROMETHEUS_URL=http://prometheus-operated.${NAMESPACE}.svc.cluster.local:9090
+PROMETHEUS_URL=http://prometheus-laf.${NAMESPACE}.svc.cluster.local:9090
 if [ "$ENABLE_MONITOR" = "true" ]; then
-    sed -e "s/\$NAMESPACE/$NAMESPACE/g" \
-        -e "s/\$PROMETHEUS_PV_SIZE/${PROMETHEUS_PV_SIZE:-20Gi}/g" \
-        prometheus-helm.yaml >prometheus-helm-with-values.yaml
-
-    kubectl apply -f ./prometheus-helm-with-values.yaml -n ${NAMESPACE}
+    kubectl apply -n ${NAMESPACE} -f <<EOF
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+labels:
+    app: prometheus-laf
+name: prometheus-laf
+spec:
+podMetadata:
+    labels:
+    app: prometheus-laf
+resources:
+    limits:
+    cpu: 200m
+    memory: 256Mi
+    requests:
+    cpu: 50m
+    memory: 128Mi
+securityContext:
+    fsGroup: 2000
+    runAsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+    type: RuntimeDefault
+evaluationInterval: 60s
+image: quay.io/prometheus/prometheus:v2.45.0
+serviceMonitorSelector: {}
+probeSelector: {}
+ruleSelector: {}
+portName: http-web
+retention: 10d
+scrapeInterval: 60s
+serviceAccountName: laf-server
+replicas: 1
+shards: 1
+storage:
+    volumeClaimTemplate:
+    metadata:
+        annotations:
+        path: /prometheus
+        value: "${}"
+    spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+        requests:
+            storage: ${PROMETHEUS_PV_SIZE:-20Gi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+name: prometheus-laf
+spec:
+ports:
+    - port: 9090
+    targetPort: http-web
+    protocol: TCP
+    name: http-web
+selector:
+    app: prometheus-laf
+type: ClusterIP
+EOF
 
     helm install prometheus-mongodb-exporter --version 3.2.0 -n ${NAMESPACE} \
         --set mongodb.uri=${DATABASE_URL} \
