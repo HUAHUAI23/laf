@@ -39,9 +39,7 @@ if [ "$ENABLE_MONITOR" = "true" ]; then
         -e "s/\$PROMETHEUS_PV_SIZE/${PROMETHEUS_PV_SIZE:-20Gi}/g" \
         prometheus-helm.yaml >prometheus-helm-with-values.yaml
 
-    helm install prometheus --version 48.3.3 -n ${NAMESPACE} \
-        -f ./prometheus-helm-with-values.yaml \
-        ./charts/kube-prometheus-stack
+    kubectl apply -f ./prometheus-helm-with-values.yaml -n ${NAMESPACE}
 
     helm install prometheus-mongodb-exporter --version 3.2.0 -n ${NAMESPACE} \
         --set mongodb.uri=${DATABASE_URL} \
