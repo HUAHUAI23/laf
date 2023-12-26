@@ -39,64 +39,64 @@ if [ "$ENABLE_MONITOR" = "true" ]; then
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-labels:
+  labels:
     app: prometheus-laf
-name: prometheus-laf
+  name: prometheus-laf
 spec:
-podMetadata:
+  podMetadata:
     labels:
-    app: prometheus-laf
-resources:
+      app: prometheus-laf
+  resources:
     limits:
-    cpu: 200m
-    memory: 256Mi
+      cpu: 200m
+      memory: 256Mi
     requests:
-    cpu: 50m
-    memory: 128Mi
-securityContext:
+      cpu: 50m
+      memory: 128Mi
+  securityContext:
     fsGroup: 2000
     runAsGroup: 2000
     runAsNonRoot: true
     runAsUser: 1000
     seccompProfile:
-    type: RuntimeDefault
-evaluationInterval: 60s
-image: quay.io/prometheus/prometheus:v2.45.0
-serviceMonitorSelector: {}
-probeSelector: {}
-ruleSelector: {}
-portName: http-web
-retention: 10d
-scrapeInterval: 60s
-serviceAccountName: laf-server
-replicas: 1
-shards: 1
-storage:
+      type: RuntimeDefault
+  evaluationInterval: 60s
+  image: quay.io/prometheus/prometheus:v2.45.0
+  serviceMonitorSelector: {}
+  probeSelector: {}
+  ruleSelector: {}
+  portName: http-web
+  retention: 10d
+  scrapeInterval: 60s
+  serviceAccountName: laf-server
+  replicas: 1
+  shards: 1
+  storage:
     volumeClaimTemplate:
-    metadata:
+      metadata:
         annotations:
-        path: /prometheus
-        value: "${}"
-    spec:
+          path: /prometheus
+          value: " ${PROMETHEUS_PV_SIZE:-20Gi} "
+      spec:
         accessModes:
-        - ReadWriteOnce
+          - ReadWriteOnce
         resources:
-        requests:
+          requests:
             storage: ${PROMETHEUS_PV_SIZE:-20Gi}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-name: prometheus-laf
+  name: prometheus-laf
 spec:
-ports:
+  ports:
     - port: 9090
-    targetPort: http-web
-    protocol: TCP
-    name: http-web
-selector:
+      targetPort: http-web
+      protocol: TCP
+      name: http-web
+  selector:
     app: prometheus-laf
-type: ClusterIP
+  type: ClusterIP
 EOF
 
     helm install prometheus-mongodb-exporter --version 3.2.0 -n ${NAMESPACE} \
